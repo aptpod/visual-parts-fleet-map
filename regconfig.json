@@ -1,0 +1,28 @@
+{
+  "core": {
+    "workingDir": ".reg",
+    "actualDir": "__screenshots__",
+    "threshold": 0,
+    "addIgnore": true,
+    "thresholdRate": 0,
+    "ximgdiff": {
+      "invocationType": "client"
+    }
+  },
+  "plugins": {
+    "reg-keygen-git-hash-plugin": {},
+    "reg-notify-gitlab-plugin": {
+      "projectId": "",
+      "privateToken": "",
+      "gitlabUrl": ""
+    },
+    "reg-notify-slack-plugin": {
+      "webhookUrl": ""
+    },
+    "reg-publish-s3-plugin": {
+      "bucketName": "",
+      "customDomain": "",
+      "pathPrefix": ""
+    }
+  }
+}

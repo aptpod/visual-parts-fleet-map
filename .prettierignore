@@ -1,0 +1,8 @@
+/node_modules
+/.public
+/.yarn
+/build
+/debug
+/_templates
+/_skeleton
+

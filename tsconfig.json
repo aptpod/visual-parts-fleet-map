@@ -1,0 +1,30 @@
+{
+  "exclude": ["node_modules", "debug", "build", "es", "lib"],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "src": ["src"],
+      "storybook/src/*": [".storybook/src/*"]
+    },
+    // if your app support IE11, please set target "es5"
+    "target": "es2017",
+    // "target": "es5",
+    "lib": ["dom"],
+    "module": "esNext",
+    "jsx": "react",
+    "allowJs": true,
+    "sourceMap": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "incremental": true,
+    "importHelpers": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

@@ -1,0 +1,2 @@
+export const CONTROL_BUTTON_LABEL_ZOOM_IN = '+'
+export const CONTROL_BUTTON_LABEL_ZOOM_OUT = '-'

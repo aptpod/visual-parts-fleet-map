@@ -1,0 +1,12 @@
+{
+  "packageAllowlist": [
+    /**
+     * This Project
+     */
+    "visual-parts-fleet-map",
+    /**
+     * aptpod sdk packages
+     */
+    "@aptpod/data-viz-visual-parts-sdk"
+  ]
+}

@@ -1,0 +1,11 @@
+/node_modules/
+!.*rc.js
+/.yarn
+/.bash
+/.gitlab
+/.public
+/.stylelintcache
+/build
+/debug
+/_templates
+/_skeleton

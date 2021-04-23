@@ -1,0 +1,1 @@
+export { StyleSheetManagerWrapper } from './component'

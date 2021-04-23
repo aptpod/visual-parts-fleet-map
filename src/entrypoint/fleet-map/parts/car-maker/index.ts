@@ -1,0 +1,1 @@
+export { CarMarker } from './component'
