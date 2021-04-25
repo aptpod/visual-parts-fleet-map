@@ -22,6 +22,8 @@ src
       - parts ....................... View のReactサブコンポーネントを実装します
         - bar-sub-division-meter
         - car-maker
+        - edge-card
+        - edges-panel-title
         - map-zoom-controller
         - scrollbar
       - selector
