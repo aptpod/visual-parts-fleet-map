@@ -35,3 +35,9 @@ src
       - utils.ts ................... ヘルパーを実装します
     - index.ts ..................... エントリポイントの定義します (複数のビジュアルパーツを実装する場合はここにimportの行を追加します)
 ```    
+
+### ローカル開発環境で実行する場合
+
+`src/entrypoint/fleet-map/constant.ts` の `OPEN_STREET_MAP_URL_DEFAULT` のクエリストリングに `API_KEY` を設定してください。
+
+`API_KEY` は [Thunderforest Global Maps](https://www.thunderforest.com/pricing/) で Sign Up すると取得することが可能です。
