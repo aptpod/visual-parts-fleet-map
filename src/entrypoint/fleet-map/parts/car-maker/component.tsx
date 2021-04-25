@@ -1,6 +1,7 @@
 import React, { memo } from 'react'
 
 type Props = {
+  size: number
   selected: boolean
   rotationAngle: number
 }
@@ -10,8 +11,8 @@ export const CarMarker: React.VFC<Props> = memo((props) => {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      width="64"
-      height="64"
+      width={props.size}
+      height={props.size}
       viewBox="0 0 64 64"
     >
       {props.selected && (

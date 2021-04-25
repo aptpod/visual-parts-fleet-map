@@ -6,17 +6,11 @@ import { Icon, Point } from 'leaflet'
 
 import { MapZoomController } from './parts/map-zoom-controller'
 import { CarMarker } from './parts/car-maker'
-import { BarSubDivisionMeter } from './parts/bar-sub-division-meter'
 import { Scrollbar } from './parts/scrollbar'
+import { EdgesPanelTitle } from './parts/edges-panel-title'
+import { EdgeCard } from './parts/edge-card'
 
-import {
-  LAYOUT_HEADER_HEIGHT,
-  OPEN_STREET_MAP_ZOOM_DEFAULT,
-  OPEN_STREET_MAP_LAT_LNG_DEFAULT,
-  OPEN_STREET_MAP_ZOOM_CONTROLS_DEFAULT,
-  OPEN_STREET_MAP_ZOOM_IN_LIMIT,
-  OPEN_STREET_MAP_ZOOM_OUT_LIMIT,
-} from './constant'
+import * as C from './constant'
 import * as S from './style'
 import * as utils from './utils'
 
@@ -52,171 +46,165 @@ export const FleetMap: React.VFC<Props> = memo((props) => {
   const { width, height } = size
 
   const [centerCoord, setCenterCoord] = useState(
-    OPEN_STREET_MAP_LAT_LNG_DEFAULT,
+    C.OPEN_STREET_MAP_LAT_LNG_DEFAULT,
   )
-  const [zoom, setZoom] = useState(OPEN_STREET_MAP_ZOOM_DEFAULT)
-  const [selectedEdgeUUID, setSelectedEdgeUUID] = useState('')
+  const [zoom, setZoom] = useState(C.OPEN_STREET_MAP_ZOOM_DEFAULT)
+  const [selectedEdgeUUID, setSelectedEdgeUUID] = useState(C.EDGE_UNSELECTED)
 
-  //
   // Zoom In / Outイベントハンドラ
-  //
   const onZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(prev + 1, OPEN_STREET_MAP_ZOOM_IN_LIMIT))
+    setZoom((prev) => Math.min(prev + 1, C.OPEN_STREET_MAP_ZOOM_IN_LIMIT))
   }, [])
   const onZoomOut = useCallback(() => {
-    setZoom((prev) => Math.max(prev - 1, OPEN_STREET_MAP_ZOOM_OUT_LIMIT))
+    setZoom((prev) => Math.max(prev - 1, C.OPEN_STREET_MAP_ZOOM_OUT_LIMIT))
   }, [])
 
-  const makeSetSelectedEdgeUUID = useCallback((edgeUUID: string) => {
-    return () => {
-      setSelectedEdgeUUID((prev) => {
-        return prev === edgeUUID ? '' : edgeUUID
-      })
-    }
-  }, [])
-
-  // サイズ、または OpenSteetMapののURLが変更になったらKeyも変更する
-  const mapContainerKey = `${width}-${height}-${openStreetMap.url}`
+  // Mapを表示するサイズ、または OpenSteetMapのURLが変更になったら
+  // Mapを再描画するようにKeyも変更する
+  const mapKey = `${width}-${height}-${openStreetMap.url}`
 
   // マップのコンテナスタイル
   const mapContainerStyle = useMemo(
     () => ({
       width,
-      height: height - LAYOUT_HEADER_HEIGHT,
+      height: height - C.LAYOUT_HEADER_HEIGHT,
     }),
     [width, height],
   )
 
-  //
-  // マップの Center 座標を更新
-  //
+  // マップの Center 座標を更新する
+  // Edgeが未選択、または Lat, Lng が無効値なら更新しない
   useEffect(() => {
     datasets.forEach(({ edgeUUID, lat, lng }) => {
-      if (edgeUUID === selectedEdgeUUID && isFinite(lat) && isFinite(lng)) {
+      if (edgeUUID === selectedEdgeUUID && utils.isFiniteLatLng(lat, lng)) {
         setCenterCoord([lat, lng])
       }
     })
   }, [datasets, selectedEdgeUUID])
 
-  const numOfEdges = datasets.length
-  const numOfActiveEdges = datasets.filter(({ lat }) => isFinite(lat)).length
+  // Edgeを選択するイベントハンドラを作成する
+  // すでに同一のEdgeが選択済みの場合は選択を解除する
+  const makeOnSelectEdgeUUID = useCallback((edgeUUID: string) => {
+    return () => {
+      setSelectedEdgeUUID((prev) => {
+        return prev === edgeUUID ? C.EDGE_UNSELECTED : edgeUUID
+      })
+    }
+  }, [])
 
-  // Action ボタンを押したらなにか実行しよう！！
+  //Car Marker の Icon を作成する
+  const makeCarMarkerIcon = useCallback(
+    (selected: boolean, heading: number) => {
+      return new Icon({
+        iconUrl: utils.toDataURISchemaSvg(
+          renderToString(
+            <CarMarker
+              size={C.CAR_MARKER_SIZE}
+              selected={selected}
+              rotationAngle={
+                isFinite(heading) ? heading : C.CAR_MARKER_HEADING_DEFAULT
+              }
+            />,
+          ),
+        ),
+        iconAnchor: [C.CAR_MARKER_SIZE / 2, C.CAR_MARKER_SIZE / 2],
+        iconSize: new Point(C.CAR_MARKER_SIZE, C.CAR_MARKER_SIZE),
+      })
+    },
+    [],
+  )
+
+  // Edgeの数を判定する
+  const numOfEdge = datasets.length
+  const numOfActiveEdge = useMemo(
+    () =>
+      datasets.filter(({ lat, lng }) => utils.isFiniteLatLng(lat, lng)).length,
+    [datasets],
+  )
+
+  // Action ボタンを押したらDriverに指示を送ろう！！
   // eslint-disable-next-line no-alert
-  const doAction = useCallback(() => alert('Do Action!'), [])
+  const doAction = useCallback(() => alert(C.DO_ACTION_MESSAGE), [])
 
   return (
-    <S.Section>
+    <S.Section marginTop={C.LAYOUT_HEADER_HEIGHT}>
       <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
         integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=='crossorigin='"
       />
 
-      <S.PanelBg top={LAYOUT_HEADER_HEIGHT}>
+      <S.EdgesPanelArea>
         <Scrollbar>
-          <S.PanelInnterBg>
-            <S.PanelHeaderArea>
-              <S.PanelTitleLeftLarge>
-                Driving {numOfActiveEdges}
-              </S.PanelTitleLeftLarge>
-
-              <S.PanelTitleRightSmall>
-                /{numOfEdges} edges
-              </S.PanelTitleRightSmall>
-            </S.PanelHeaderArea>
+          <S.EdgesPanelBg>
+            <S.EdgesPanelHeaderArea>
+              <EdgesPanelTitle
+                numOfActiveEdge={numOfActiveEdge}
+                numOfTotalEdge={numOfEdge}
+              />
+            </S.EdgesPanelHeaderArea>
 
             <S.EdgeCardsArea>
-              {datasets.map((dataset, idx) => {
-                const selected = selectedEdgeUUID === dataset.edgeUUID
-                return (
-                  <S.EdgeCard
+              {useMemo(() => {
+                return datasets.map((dataset, idx) => (
+                  <EdgeCard
                     key={idx}
-                    selected={selected}
-                    onClick={makeSetSelectedEdgeUUID(dataset.edgeUUID)}
-                  >
-                    <S.EdgeTitle>
-                      {dataset.edgeName != '' ? dataset.edgeName : 'NO NAME'}
-                    </S.EdgeTitle>
-
-                    <S.WithSuffix>
-                      <S.EdgeParameter>
-                        SOC :
-                        {isFinite(dataset.soc)
-                          ? `${Math.ceil(dataset.soc * 100)}%`
-                          : '--'}
-                      </S.EdgeParameter>
-                      {isFinite(dataset.soc) && (
-                        <BarSubDivisionMeter ratio={dataset.soc} />
-                      )}
-                    </S.WithSuffix>
-
-                    <S.EdgeParameter>
-                      Speed :{' '}
-                      {isFinite(dataset.speed) ? (
-                        <>{dataset.speed.toFixed(0)} Km/h</>
-                      ) : (
-                        '--'
-                      )}
-                    </S.EdgeParameter>
-                    {selected && (
-                      <>
-                        <S.EdgeParameter>Driver : aptpod</S.EdgeParameter>
-                        <S.ActionArea>
-                          <S.ActionButton onClick={doAction}>
-                            Action
-                          </S.ActionButton>
-                        </S.ActionArea>
-                      </>
+                    selected={selectedEdgeUUID === dataset.edgeUUID}
+                    name={utils.formatEdgeName(dataset.edgeName, C.NO_NAME)}
+                    soc={utils.formatSocString(dataset.soc, C.INVALID_STRING)}
+                    socRatio={utils.formatSocRatio(
+                      dataset.soc,
+                      C.SOC_RATIO_DEFAULT,
                     )}
-                  </S.EdgeCard>
-                )
-              })}
+                    speed={utils.formatSppedString(
+                      dataset.speed,
+                      C.INVALID_STRING,
+                    )}
+                    driver={C.DRIVER_NAME}
+                    onCardClick={makeOnSelectEdgeUUID(dataset.edgeUUID)}
+                    onActionClick={doAction}
+                  />
+                ))
+              }, [datasets, doAction, makeOnSelectEdgeUUID, selectedEdgeUUID])}
             </S.EdgeCardsArea>
-          </S.PanelInnterBg>
+          </S.EdgesPanelBg>
         </Scrollbar>
-      </S.PanelBg>
+      </S.EdgesPanelArea>
 
-      <S.MapArea top={LAYOUT_HEADER_HEIGHT}>
+      <S.MapArea>
         <Map
-          key={mapContainerKey}
+          key={mapKey}
           center={centerCoord}
           zoom={zoom}
-          zoomControl={OPEN_STREET_MAP_ZOOM_CONTROLS_DEFAULT}
+          zoomControl={C.OPEN_STREET_MAP_ZOOM_CONTROLS_DEFAULT}
           style={mapContainerStyle}
         >
           <TileLayer
             url={openStreetMap.url}
             attribution={openStreetMap.attribution}
           />
+
           {useMemo(() => {
-            return datasets.map(({ lat, lng, heading, edgeUUID }, idx) => {
-              const selected = selectedEdgeUUID === edgeUUID
-
-              const carMarkerSvg = renderToString(
-                <CarMarker
-                  selected={selected}
-                  rotationAngle={isFinite(heading) ? heading : 0}
-                />,
-              )
-              const icon = makeMarkerIcon(
-                utils.toDataURISchemaSvg(carMarkerSvg),
-              )
-
-              return (
-                <React.Fragment key={idx}>
-                  {isFinite(lat) && isFinite(lng) && (
-                    <Marker
-                      key={`Marker-${idx}`}
-                      position={[lat, lng]}
-                      icon={icon}
-                      onClick={makeSetSelectedEdgeUUID(edgeUUID)}
-                    />
-                  )}
-                </React.Fragment>
-              )
-            })
-          }, [datasets, makeSetSelectedEdgeUUID, selectedEdgeUUID])}
+            return datasets.map((dataset, idx) => (
+              <React.Fragment key={idx}>
+                {utils.isFiniteLatLng(dataset.lat, dataset.lng) && (
+                  <Marker
+                    position={[dataset.lat, dataset.lng]}
+                    icon={makeCarMarkerIcon(
+                      selectedEdgeUUID === dataset.edgeUUID,
+                      dataset.heading,
+                    )}
+                    onClick={makeOnSelectEdgeUUID(dataset.edgeUUID)}
+                  />
+                )}
+              </React.Fragment>
+            ))
+          }, [
+            datasets,
+            makeCarMarkerIcon,
+            makeOnSelectEdgeUUID,
+            selectedEdgeUUID,
+          ])}
 
           <S.MapZoomControllerArea>
             <MapZoomController
@@ -229,15 +217,3 @@ export const FleetMap: React.VFC<Props> = memo((props) => {
     </S.Section>
   )
 })
-
-/**
- * Marker のアイコンを作成する
- */
-const makeMarkerIcon = (iconURL: string) => {
-  return new Icon({
-    iconUrl: iconURL,
-    iconRetinaUrl: iconURL,
-    iconAnchor: [32, 32],
-    iconSize: new Point(64, 64),
-  })
-}
