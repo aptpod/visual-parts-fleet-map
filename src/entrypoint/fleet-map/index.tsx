@@ -20,10 +20,10 @@ import thumbnailSrc from 'src/assets/images/fleet-map/th-fleet-map@3x.png'
  * Metadata 作成
  */
 const metadata: Metadata = {
-  partsType: 'd-@demo/fleet-map',
-  partsName: 'd-Fleet Map',
+  partsType: '@demo/fleet-map',
+  partsName: 'Fleet Map',
   groupName: 'Demo',
-  panelTagName: 'd-x-demo-fleet-map',
+  panelTagName: 'x-demo-fleet-map',
   getThumbnailURL: (baseURL: string) => `${baseURL}${thumbnailSrc}`,
   panelViewConfig: {
     displayTimestamp: true,
